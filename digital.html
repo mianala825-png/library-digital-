@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Digital Library</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#faf7f2;--bg2:#f0ebe0;--bg3:#e8e0d0;
+  --text:#1a1208;--text2:#5a4a2a;--text3:#9a8a6a;
+  --accent:#2d1b4e;--accent2:#1a3a2e;
+  --card:#ffffff;--border:rgba(90,74,42,0.15);
+  --shadow:0 2px 20px rgba(45,27,78,0.08);
+  --radius:12px;
+}
+[data-dark="true"]{
+  --bg:#0d0a14;--bg2:#16121e;--bg3:#1e1828;
+  --text:#f5e6d3;--text2:#c4b5a0;--text3:#7a6a5a;
+  --card:#1a1628;--border:rgba(245,230,211,0.1);
+  --shadow:0 2px 20px rgba(0,0,0,0.4);
+}
+html,body{height:100%;font-family:'Crimson Pro',serif;background:var(--bg);color:var(--text);transition:background .3s,color .3s}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg2)}
+::-webkit-scrollbar-thumb{background:var(--text3);border-radius:3px}
+
+.app{display:flex;height:100vh;overflow:hidden}
+.sidebar{width:240px;min-width:240px;background:var(--accent);display:flex;flex-direction:column;overflow-y:auto;transition:transform .3s}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.header{padding:1rem 1.5rem;background:var(--card);border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.content{flex:1;overflow-y:auto;padding:1.5rem}
+
+.sidebar-logo{padding:1.5rem 1.2rem 1rem;border-bottom:1px solid rgba(255,255,255,0.1)}
+.logo-title{font-family:'Playfair Display',serif;font-size:1.3rem;font-weight:700;color:#f5e6d3;letter-spacing:0.5px}
+.logo-sub{font-family:'Space Mono',monospace;font-size:9px;color:rgba(245,230,211,0.5);letter-spacing:2px;margin-top:2px}
+
+.nav-section{padding:.75rem 1.2rem .3rem;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(245,230,211,0.4)}
+.nav-item{display:flex;align-items:center;gap:10px;padding:.65rem 1.2rem;cursor:pointer;transition:background .2s;border-left:3px solid transparent;color:rgba(245,230,211,0.7);font-size:14px}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:#f5e6d3}
+.nav-item.active{background:rgba(255,255,255,0.1);border-left-color:#f5e6d3;color:#f5e6d3;font-weight:600}
+.nav-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.nav-count{margin-left:auto;font-family:'Space Mono',monospace;font-size:9px;background:rgba(255,255,255,0.15);padding:2px 7px;border-radius:8px}
+
+.menu-btn{display:none;background:none;border:none;cursor:pointer;padding:4px;color:var(--text2);font-size:18px}
+.header-title{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:700;color:var(--text);flex:1}
+.search-box{display:flex;align-items:center;gap:8px;background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;padding:6px 12px;flex:1;max-width:300px}
+.search-box input{background:none;border:none;outline:none;font-family:'Crimson Pro',serif;font-size:14px;color:var(--text);width:100%}
+.search-box input::placeholder{color:var(--text3)}
+.icon-btn{background:none;border:0.5px solid var(--border);border-radius:8px;padding:7px 10px;cursor:pointer;color:var(--text2);font-size:13px;transition:all .2s;white-space:nowrap}
+.icon-btn:hover{background:var(--bg2);color:var(--text)}
+
+.page-title{font-family:'Playfair Display',serif;font-size:1.6rem;font-weight:700;color:var(--text);margin-bottom:.25rem}
+.page-sub{font-family:'Crimson Pro',serif;font-style:italic;color:var(--text2);font-size:1rem;margin-bottom:1.25rem}
+.book-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(175px,1fr));gap:16px}
+.book-card{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s;box-shadow:var(--shadow)}
+.book-card:hover{transform:translateY(-4px);box-shadow:0 8px 30px rgba(45,27,78,0.15)}
+.book-cover{height:160px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.book-cover-inner{text-align:center;padding:1rem}
+.cover-icon{font-size:2.5rem;margin-bottom:.5rem;display:block}
+.cover-title{font-family:'Playfair Display',serif;font-size:13px;font-weight:700;color:rgba(255,255,255,0.95);line-height:1.2}
+.book-info{padding:12px}
+.book-genre-tag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:8px;display:inline-block;margin-bottom:6px}
+.book-name{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:var(--text);line-height:1.3;margin-bottom:2px}
+.book-author{font-family:'Crimson Pro',serif;font-style:italic;font-size:12px;color:var(--text2);margin-bottom:8px}
+.book-actions{display:flex;gap:6px}
+.btn-read{flex:1;background:var(--accent);color:#f5e6d3;border:none;border-radius:6px;padding:6px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer;transition:opacity .2s}
+.btn-read:hover{opacity:.85}
+.btn-fav{background:var(--bg2);border:0.5px solid var(--border);border-radius:6px;padding:6px 8px;cursor:pointer;transition:background .2s;font-size:12px}
+.btn-fav:hover{background:var(--bg3)}
+
+.stars{display:flex;gap:2px;margin-bottom:6px}
+.star{font-size:11px;cursor:pointer;color:var(--text3);transition:color .1s}
+.star.on{color:#EF9F27}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:100;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .3s}
+.modal-overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--card);border-radius:16px;width:90%;max-width:750px;max-height:90vh;display:flex;flex-direction:column;overflow:hidden;transform:scale(.95);transition:transform .3s}
+.modal-overlay.open .modal{transform:scale(1)}
+.modal-header{padding:1rem 1.5rem;border-bottom:0.5px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.modal-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:700;color:var(--text);flex:1}
+.modal-controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.ctrl-btn{background:var(--bg2);border:0.5px solid var(--border);border-radius:6px;padding:5px 9px;cursor:pointer;font-size:12px;color:var(--text2);transition:background .2s}
+.ctrl-btn:hover{background:var(--bg3)}
+.modal-body{flex:1;overflow-y:auto;padding:2rem}
+.reading-text{line-height:1.9;color:var(--text)}
+.reading-text h2{font-family:'Playfair Display',serif;font-size:1.4rem;margin-bottom:1rem;color:var(--text)}
+.reading-text p{margin-bottom:1.2rem}
+.modal-footer{padding:.75rem 1.5rem;border-top:0.5px solid var(--border);flex-shrink:0}
+.progress-label{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);margin-bottom:6px;display:flex;justify-content:space-between}
+.progress-bar{position:relative;height:4px;background:var(--bg3);border-radius:2px;cursor:pointer}
+.progress-fill{height:100%;border-radius:2px;background:var(--accent);transition:width .3s}
+.progress-bar input[type=range]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;margin:0;height:100%}
+
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:1.5rem}
+.stat-card{background:var(--bg2);border-radius:var(--radius);padding:1rem;text-align:center}
+.stat-num{font-family:'Playfair Display',serif;font-size:2rem;font-weight:700;color:var(--text)}
+.stat-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--text3);text-transform:uppercase;margin-top:4px}
+
+.section-title{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:600;color:var(--text);margin-bottom:.75rem;padding-bottom:.5rem;border-bottom:0.5px solid var(--border)}
+
+.badge-grid{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:1.5rem}
+.badge{display:flex;align-items:center;gap:8px;background:var(--bg2);border:0.5px solid var(--border);border-radius:20px;padding:6px 14px;font-size:13px}
+.badge-icon{font-size:16px}
+.badge-name{font-family:'Crimson Pro',serif;font-size:13px;color:var(--text)}
+.badge.locked{opacity:.4;filter:grayscale(1)}
+
+.activity-list{display:flex;flex-direction:column;gap:8px;margin-bottom:1.5rem}
+.activity-item{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;align-items:center;gap:12px}
+.act-cover{width:36px;height:50px;border-radius:4px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px}
+.act-info{flex:1}
+.act-title{font-family:'Playfair Display',serif;font-size:14px;font-weight:600;color:var(--text)}
+.act-author{font-family:'Crimson Pro',serif;font-style:italic;font-size:12px;color:var(--text2)}
+.act-progress{height:4px;background:var(--bg3);border-radius:2px;margin-top:6px}
+.act-progress-fill{height:100%;border-radius:2px;background:#1D9E75}
+.act-pct{font-family:'Space Mono',monospace;font-size:10px;color:var(--text3);margin-top:3px}
+
+.review-item{background:var(--card);border:0.5px solid var(--border);border-radius:var(--radius);padding:12px 14px;margin-bottom:8px}
+.review-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.review-book{font-family:'Playfair Display',serif;font-size:13px;font-weight:600;color:var(--text)}
+.review-text{font-family:'Crimson Pro',serif;font-size:13px;color:var(--text2);font-style:italic;line-height:1.5}
+
+.note-item{background:var(--card);border-left:3px solid var(--accent);border-radius:0 var(--radius) var(--radius) 0;padding:10px 14px;margin-bottom:8px;border-top:0.5px solid var(--border);border-right:0.5px solid var(--border);border-bottom:0.5px solid var(--border)}
+.note-book{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:var(--text3);margin-bottom:4px}
+.note-text{font-family:'Crimson Pro',serif;font-size:13px;color:var(--text);line-height:1.5}
+
+[data-fsize="small"] .reading-text{font-size:13px}
+[data-fsize="medium"] .reading-text{font-size:16px}
+[data-fsize="large"] .reading-text{font-size:19px}
+
+@media(max-width:680px){
+  .sidebar{position:fixed;left:0;top:0;bottom:0;z-index:50;transform:translateX(-100%)}
+  .sidebar.open{transform:none}
+  .menu-btn{display:block}
+  .book-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+  .search-box{max-width:160px}
+}
+</style>
+</head>
+<body>
+
+<div class="app" id="app">
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-title">Digital Library</div>
+    <div class="logo-sub">PERPUSTAKAAN DIGITAL</div>
+  </div>
+  <div class="nav-section">NAVIGASI</div>
+  <div class="nav-item active" onclick="showPage('home',this)">
+    <span>🏛️</span> Beranda <span class="nav-count">21</span>
+  </div>
+  <div class="nav-item" onclick="showPage('activity',this)">
+    <span>📊</span> Aktivitas Saya
+  </div>
+  <div class="nav-section" style="margin-top:.5rem">GENRE</div>
+  <div class="nav-item" onclick="filterGenre('Sejarah',this)">
+    <span class="nav-dot" style="background:#534AB7"></span> Sejarah <span class="nav-count">3</span>
+  </div>
+  <div class="nav-item" onclick="filterGenre('Matematika',this)">
+    <span class="nav-dot" style="background:#1D9E75"></span> Matematika <span class="nav-count">3</span>
+  </div>
+  <div class="nav-item" onclick="filterGenre('Filsafat',this)">
+    <span class="nav-dot" style="background:#D85A30"></span> Filsafat <span class="nav-count">3</span>
+  </div>
+  <div class="nav-item" onclick="filterGenre('Sains',this)">
+    <span class="nav-dot" style="background:#378ADD"></span> Sains <span class="nav-count">3</span>
+  </div>
+  <div class="nav-item" onclick="filterGenre('Fisika',this)">
+    <span class="nav-dot" style="background:#EF9F27"></span> Fisika <span class="nav-count">3</span>
+  </div>
+  <div class="nav-item" onclick="filterGenre('Fiksi',this)">
+    <span class="nav-dot" style="background:#639922"></span> Fiksi <span class="nav-count">3</span>
+  </div>
+  <div class="nav-item" onclick="filterGenre('Non-Fiksi',this)">
+    <span class="nav-dot" style="background:#D4537E"></span> Non-Fiksi <span class="nav-count">3</span>
+  </div>
+</nav>
+
+<div class="main">
+  <div class="header">
+    <button class="menu-btn" onclick="toggleSidebar()">☰</button>
+    <div class="header-title" id="headerTitle">Digital Library</div>
+    <div class="search-box">
+      <span style="color:var(--text3);font-size:13px">🔍</span>
+      <input type="text" placeholder="Cari buku..." id="searchInput" oninput="doSearch()">
+    </div>
+    <button class="icon-btn" onclick="toggleDark()" id="darkBtn">🌙 Gelap</button>
+  </div>
+
+  <div class="content" id="homePage">
+    <div class="page-title" id="pageTitle">Semua Koleksi</div>
+    <div class="page-sub" id="pageSub">Temukan buku favoritmu dari berbagai genre</div>
+    <div class="book-grid" id="bookGrid"></div>
+  </div>
+
+  <div class="content" id="activityPage" style="display:none">
+    <div class="page-title">Aktivitas Saya</div>
+    <div class="page-sub">Pantau perjalanan membacamu</div>
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="section-title">📖 Sedang Dibaca</div>
+    <div class="activity-list" id="readingList"></div>
+    <div class="section-title">🏆 Lencana &amp; Pencapaian</div>
+    <div class="badge-grid" id="badgeGrid"></div>
+    <div class="section-title">⭐ Ulasan Saya</div>
+    <div id="reviewList"></div>
+    <div class="section-title">📝 Catatan Bacaan</div>
+    <div id="noteList"></div>
+  </div>
+</div>
+</div>
+
+<div class="modal-overlay" id="readModal">
+  <div class="modal" id="modalBox" data-fsize="medium">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle">Judul Buku</div>
+        <div style="font-family:'Crimson Pro',serif;font-style:italic;font-size:12px;color:var(--text2)" id="modalAuthor"></div>
+      </div>
+      <div class="modal-controls">
+        <button class="ctrl-btn" onclick="setFSize('small')">A-</button>
+        <button class="ctrl-btn" onclick="setFSize('large')">A+</button>
+        <button class="ctrl-btn" onclick="toggleModalDark()" id="modalDarkBtn">🌙</button>
+        <button class="ctrl-btn" onclick="addBookmark()" id="bkmBtn">🔖</button>
+        <button class="ctrl-btn" onclick="closeModal()">✕</button>
+      </div>
+    </div>
+    <div class="modal-body">
+      <div class="reading-text" id="modalContent"></div>
+      <div style="margin-top:1.5rem;padding-top:1rem;border-top:0.5px solid var(--border)">
+        <div style="font-family:'Playfair Display',serif;font-size:1rem;font-weight:600;color:var(--text);margin-bottom:.5rem">Beri Rating</div>
+        <div class="stars" id="modalStars"></div>
+        <textarea id="reviewInput" placeholder="Tulis ulasan singkat..." style="width:100%;margin-top:.5rem;padding:8px;background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;font-family:'Crimson Pro',serif;font-size:14px;color:var(--text);resize:vertical;min-height:60px;outline:none"></textarea>
+        <textarea id="noteInput" placeholder="Catatan pribadi..." style="width:100%;margin-top:.5rem;padding:8px;background:var(--bg2);border:0.5px solid var(--border);border-radius:8px;font-family:'Crimson Pro',serif;font-size:14px;color:var(--text);resize:vertical;min-height:50px;outline:none"></textarea>
+        <button onclick="saveReview()" style="margin-top:.5rem;background:var(--accent);color:#f5e6d3;border:none;border-radius:8px;padding:7px 18px;font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;letter-spacing:1px" id="saveBtn">SIMPAN</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <div class="progress-label">
+        <span>Progress Membaca</span>
+        <span id="progressPct">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        <input type="range" min="0" max="100" value="0" id="progressRange" oninput="updateProgress(this.value)">
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const GENRE_COLORS = {
+  'Sejarah':  {bg:'#534AB7',light:'#EEEDFE',text:'#3C3489',icon:'📜'},
+  'Matematika':{bg:'#1D9E75',light:'#E1F5EE',text:'#085041',icon:'∑'},
+  'Filsafat': {bg:'#D85A30',light:'#FAECE7',text:'#712B13',icon:'🦉'},
+  'Sains':    {bg:'#378ADD',light:'#E6F1FB',text:'#0C447C',icon:'🔬'},
+  'Fisika':   {bg:'#EF9F27',light:'#FAEEDA',text:'#633806',icon:'⚛️'},
+  'Fiksi':    {bg:'#639922',light:'#EAF3DE',text:'#27500A',icon:'📖'},
+  'Non-Fiksi':{bg:'#D4537E',light:'#FBEAF0',text:'#72243E',icon:'💡'},
+};
+
+const BOOKS = [
+  {id:1,genre:'Sejarah',title:'Sapiens',author:'Yuval Noah Harari',year:2011,synopsis:`<h2>Sapiens: A Brief History of Humankind</h2><p>Seratus ribu tahun yang lalu, setidaknya enam spesies manusia menghuni bumi. Hari ini hanya ada satu — <em>Homo sapiens</em>.</p><p>Bagaimana spesies kita berhasil menguasai planet ini? Mengapa kita membangun kota, mendirikan kerajaan, dan menciptakan seni, agama, serta ilmu pengetahuan? Yuval Noah Harari menelusuri sejarah umat manusia dari asal usulnya di Afrika, melalui Revolusi Kognitif, Revolusi Pertanian, hingga kemunculan kerajaan dan kapitalisme.</p><p>Ia mengajukan pertanyaan-pertanyaan provokatif: Apakah sejarah membuat kita lebih bahagia? Apakah kita memang pantas menjadi penguasa bumi? Dengan gaya yang memikat dan wawasan tajam, Sapiens menawarkan panorama menyeluruh perjalanan manusia.</p>`},
+  {id:2,genre:'Sejarah',title:'Guns, Germs & Steel',author:'Jared Diamond',year:1997,synopsis:`<h2>Guns, Germs, and Steel</h2><p>Mengapa peradaban Eropa dan Asia menguasai dunia, bukan peradaban Afrika atau Amerika? Jawabannya bukan terletak pada keunggulan ras atau kecerdasan — melainkan pada geografi dan ekologi.</p><p>Benua yang memiliki hewan yang dapat dijinakkan, tanaman yang bisa dibudidayakan, dan sumbu timur-barat yang memungkinkan penyebaran teknologi lebih cepat, berkembang menjadi peradaban yang dominan.</p><p>Buku pemenang Pulitzer ini mengubah cara kita memahami sejarah manusia — sebuah argumen brilian yang didukung oleh biologi, linguistik, arkeologi, dan antropologi.</p>`},
+  {id:3,genre:'Sejarah',title:'The History of the Ancient World',author:'Susan Wise Bauer',year:2007,synopsis:`<h2>The History of the Ancient World</h2><p>Dari Sumeria kuno hingga jatuhnya Roma, Susan Wise Bauer membawa kita dalam perjalanan epik melintasi ribuan tahun peradaban manusia pertama.</p><p>Buku ini menyatukan narasi-narasi yang sering terpisah — Mesir, Mesopotamia, India, Cina, Yunani, dan Roma — menjadi satu kisah yang kohesif dan memikat.</p><p>Dengan memanfaatkan catatan-catatan primer dari berbagai peradaban, Bauer menghadirkan tokoh-tokoh sejarah sebagai manusia nyata dengan ambisi, ketakutan, dan impian mereka.</p>`},
+  {id:4,genre:'Matematika',title:'The Art of Problem Solving',author:'Richard Rusczyk',year:2006,synopsis:`<h2>The Art of Problem Solving</h2><p>Matematika bukan sekadar menghitung — ia adalah seni memecahkan masalah. Buku ini dirancang untuk mereka yang ingin benar-benar menguasai matematika, bukan sekadar menghafal rumus.</p><p>Richard Rusczyk mengajak pembaca berpikir seperti matematikawan sejati. Setiap konsep dibangun dari intuisi dasar, selalu bertanya "mengapa" sebelum "bagaimana".</p><p>Dari aljabar dasar hingga teori bilangan, dari geometri hingga kombinatorika — ini adalah panduan untuk mengembangkan pola pikir matematis yang kuat.</p>`},
+  {id:5,genre:'Matematika',title:'What Is Mathematics?',author:'Courant & Robbins',year:1941,synopsis:`<h2>What Is Mathematics?</h2><p>Ditulis oleh Richard Courant dan Herbert Robbins, buku klasik ini telah menginspirasi generasi demi generasi matematikawan sejak 1941. Albert Einstein menyebutnya sebagai "karya seni matematis yang langka".</p><p>Buku ini menjawab pertanyaan mendasar: apa itu matematika sebenarnya? Bukan kumpulan rumus, melainkan sebuah bangunan ide yang indah dan kohesif, dibangun di atas landasan logika yang kokoh.</p><p>Dari bilangan prima dan konstruksi geometris, hingga kalkulus dan topologi, setiap topik disajikan dengan kejelasan kristal.</p>`},
+  {id:6,genre:'Matematika',title:'Gödel, Escher, Bach',author:'Douglas Hofstadter',year:1979,synopsis:`<h2>Gödel, Escher, Bach: An Eternal Golden Braid</h2><p>Buku pemenang Pulitzer yang legendaris ini menjelajahi hubungan mendalam antara karya matematikawan Kurt Gödel, seniman M.C. Escher, dan komponis Johann Sebastian Bach.</p><p>Hofstadter menggunakan dialog-dialog imajinatif untuk menjelaskan teori ketidaklengkapan Gödel, struktur fuga Bach, dan ilusi visual Escher. Semua ini mengarah pada pertanyaan terbesar: bagaimana kesadaran muncul dari otak yang pada dasarnya adalah mesin mekanis?</p><p>Sebuah perjalanan intelektual yang luar biasa — kadang menggemaskan, kadang mencerahkan, selalu menantang.</p>`},
+  {id:7,genre:'Filsafat',title:'Meditations',author:'Marcus Aurelius',year:180,synopsis:`<h2>Meditations — Marcus Aurelius</h2><p>Ditulis selama masa kampanye militer di perbatasan kekaisaran Romawi, <em>Meditations</em> adalah catatan pribadi seorang kaisar — bukan untuk dipublikasikan, melainkan untuk menguatkan dirinya sendiri.</p><p>Marcus Aurelius menulis tentang disiplin diri, ketidakkekalan kekuasaan, dan cara menemukan ketenangan di tengah kekacauan. Filsafat Stoik yang ia anut mengajarkan bahwa kebahagiaan sejati tidak tergantung pada keadaan luar, melainkan pada cara kita meresponsnya.</p><p>Membaca Meditations adalah seperti bercakap-cakap dengan seorang teman yang bijak dan jujur — yang kebetulan pernah menjadi penguasa separuh dunia.</p>`},
+  {id:8,genre:'Filsafat',title:'Thus Spoke Zarathustra',author:'Friedrich Nietzsche',year:1883,synopsis:`<h2>Thus Spoke Zarathustra</h2><p>Ketika Zarathustra, sang nabi, turun dari gunung setelah sepuluh tahun menyendiri, ia membawa kabar yang mengguncang: <em>Tuhan telah mati</em>. Dan dari kehampaan itu, manusia harus menciptakan nilai-nilainya sendiri.</p><p>Nietzsche menulis buku ini dalam gaya yang puitis dan provokatif. Di dalamnya ia mengembangkan konsep-konsep yang akan mendefinisikan pemikiran modern: <em>Übermensch</em>, kehendak untuk berkuasa, dan pengulangan abadi.</p><p>Buku yang mempengaruhi banyak pemikir besar — sebuah karya yang harus dibaca dengan mata terbuka dan pikiran kritis.</p>`},
+  {id:9,genre:'Filsafat',title:'The Republic',author:'Plato',year:-380,synopsis:`<h2>The Republic — Plato</h2><p>Lebih dari dua ribu tahun lalu, di taman Akademia Athena, Socrates berdialog dengan para pemuda tentang pertanyaan paling mendasar: apa itu keadilan? Percakapan itu diabadikan Plato dalam karya terpenting dalam sejarah filsafat Barat.</p><p>Plato membangun visinya tentang negara ideal dan memperkenalkan alegori gua yang ikonik: manusia yang dirantai di dalam gua, menyangka bayangan di dinding adalah realitas, hingga salah satu dari mereka berhasil keluar dan melihat cahaya matahari.</p><p>Pertanyaan-pertanyaan yang diajukan Plato masih relevan hari ini: siapa yang layak berkuasa? Apa yang kita utangkan kepada masyarakat?</p>`},
+  {id:10,genre:'Sains',title:'A Brief History of Time',author:'Stephen Hawking',year:1988,synopsis:`<h2>A Brief History of Time</h2><p>Dari Big Bang hingga lubang hitam, dari relativitas hingga mekanika kuantum — Stephen Hawking mengajak kita dalam perjalanan luar biasa ke ujung pemahaman manusia tentang alam semesta, tanpa satu pun persamaan matematika.</p><p>Hawking menjelaskan bagaimana fisika modern menjawab pertanyaan-pertanyaan tentang asal usul alam semesta — atau justru membuat kita sadar betapa sedikit yang kita ketahui.</p><p>Lebih dari 10 juta eksemplar terjual. Sebuah buku yang mengingatkan kita bahwa manusia — makhluk kecil di planet kecil — mampu memahami hukum-hukum yang mengatur alam semesta raya.</p>`},
+  {id:11,genre:'Sains',title:'The Selfish Gene',author:'Richard Dawkins',year:1976,synopsis:`<h2>The Selfish Gene</h2><p>Bagaimana jika bukan individu, bukan spesies, tetapi <em>gen</em> yang menjadi unit dasar evolusi? Pertanyaan ini menjadi landasan buku revolusioner Richard Dawkins yang mengubah cara kita memahami kehidupan.</p><p>Dawkins mengajukan perspektif "gen-sentris": organisme hanyalah "mesin kelangsungan hidup" yang diciptakan gen untuk mereplikasi dirinya sendiri.</p><p>Di buku inilah untuk pertama kalinya dunia mengenal konsep <em>meme</em> — unit budaya yang menyebar dengan cara analogs dengan gen. Provokatif, brilian, dan terkadang kontroversial.</p>`},
+  {id:12,genre:'Sains',title:'The Double Helix',author:'James Watson',year:1968,synopsis:`<h2>The Double Helix</h2><p>Ini bukan sekadar kisah penemuan ilmiah terbesar abad ke-20. Ini adalah memoar yang jujur tentang bagaimana penemuan struktur DNA benar-benar terjadi: dengan persaingan sengit, ego yang besar, dan momen-momen inspirasi yang tak terduga.</p><p>James Watson mengungkap perjalanan menuju penemuan yang mengubah biologi selamanya — termasuk peran Rosalind Franklin yang krusial namun sering diabaikan.</p><p>Ditulis dengan gaya yang segar dan personal, buku ini memperlihatkan wajah asli ilmu pengetahuan: manusiawi, penuh ketidakpastian.</p>`},
+  {id:13,genre:'Fisika',title:'The Feynman Lectures on Physics',author:'Richard Feynman',year:1964,synopsis:`<h2>The Feynman Lectures on Physics</h2><p>Ketika Richard Feynman mengajar mahasiswa tahun pertama di Caltech pada awal 1960-an, kuliah-kuliahnya begitu luar biasa sehingga para profesor pun ikut duduk di bangku belakang.</p><p>Feynman tidak mengajar dengan cara biasa — ia membangun pemahaman dari prinsip pertama, selalu bertanya "mengapa ini benar?" Dari mekanika Newton hingga mekanika kuantum, semuanya dijelaskan dengan kejernihan, humor, dan kedalaman yang khas.</p><p>Di setiap halaman terasa semangat seorang anak kecil yang terpesona oleh alam semesta. Standar emas pengajaran fisika di seluruh dunia.</p>`},
+  {id:14,genre:'Fisika',title:'The Elegant Universe',author:'Brian Greene',year:1999,synopsis:`<h2>The Elegant Universe</h2><p>Selama seratus tahun, dua pilar fisika modern — relativitas umum dan mekanika kuantum — berdiri kokoh tetapi saling bertentangan. Teori dawai menjanjikan jembatan yang ditunggu-tunggu.</p><p>Brian Greene menjelaskan bahwa dalam teori dawai, partikel-partikel fundamental bukanlah titik tanpa dimensi, melainkan "dawai" energi yang bergetar dalam sebelas dimensi — sebagian besar tersembunyi dari persepsi kita.</p><p>Getaran berbeda menghasilkan partikel berbeda, seperti nada berbeda pada satu senar gitar. Penjelasan yang memukau tentang teori paling ambisius dalam fisika.</p>`},
+  {id:15,genre:'Fisika',title:'Six Easy Pieces',author:'Richard Feynman',year:1994,synopsis:`<h2>Six Easy Pieces</h2><p>Bagi mereka yang ingin memahami bagaimana dunia benar-benar bekerja tanpa terintimidasi oleh matematika, Six Easy Pieces adalah titik masuk yang sempurna.</p><p>Dipilih dari The Feynman Lectures on Physics, enam bab ini adalah yang paling mudah diakses — namun tetap memiliki kedalaman khas Feynman. Dari atom dan gerakannya hingga mekanika kuantum, semua dijelaskan dengan analogi yang tepat.</p><p>Buku ini membuktikan bahwa fisika adalah cara melihat keindahan yang tersembunyi di balik dunia sehari-hari.</p>`},
+  {id:16,genre:'Fiksi',title:'1984',author:'George Orwell',year:1949,synopsis:`<h2>1984 — George Orwell</h2><p>Di negara Oceania yang totaliter, Winston Smith bekerja untuk Kementerian Kebenaran — tugasnya adalah memalsukan sejarah agar sesuai dengan kepentingan Partai. Big Brother ada di mana-mana: di poster-poster besar, di layar telescreen yang memata-matai setiap gerakan.</p><p>Ketika Winston jatuh cinta pada Julia dan mulai meragukan doktrin Partai, ia memasuki perjalanan yang tak bisa ditarik kembali — menuju kebebasan yang mungkin hanya berakhir pada kehancuran.</p><p>Diterbitkan 1949, konsep-konsep Orwell — <em>doublethink</em>, <em>Newspeak</em>, <em>thoughtcrime</em> — telah masuk ke dalam bahasa kita. Di era pengawasan digital, pesan ini terdengar lebih keras dari sebelumnya.</p>`},
+  {id:17,genre:'Fiksi',title:'Dune',author:'Frank Herbert',year:1965,synopsis:`<h2>Dune — Frank Herbert</h2><p>Di planet Arrakis — atau Dune — tidak ada air. Yang ada hanyalah gurun tak bertepi, cacing pasir raksasa, dan <em>spice melange</em>, zat terlangka dan terpenting di galaksi.</p><p>Paul Atreides, putra seorang duke, tiba di Arrakis untuk mengambil alih pengelolaan planet itu. Tapi pengkhianatan memaksanya melarikan diri ke gurun — dan memulai perjalanan menjadi sesuatu yang lebih dari sekadar manusia biasa.</p><p>Pemenang Hugo Award dan Nebula Award, Dune adalah novel sains-fiksi terlaris sepanjang masa — meditasi tentang ekologi, agama, politik, dan bahaya pemujaan pahlawan.</p>`},
+  {id:18,genre:'Fiksi',title:'Bumi Manusia',author:'Pramoedya Ananta Toer',year:1980,synopsis:`<h2>Bumi Manusia — Pramoedya Ananta Toer</h2><p>Di Hindia Belanda awal abad ke-20, Minke — seorang pemuda Jawa terpelajar — berjuang menemukan identitasnya di antara dua dunia: tradisi feodal Jawa dan modernitas kolonial Belanda.</p><p>Ketika ia jatuh cinta pada Annelies, ia terseret ke dalam pusaran hukum kolonial yang tidak pernah mengakui kemanusiaan penuh orang-orang pribumi. Di balik kisah cinta yang tragis itu berdiri Nyai Ontosoroh — wanita tanpa status hukum, namun memiliki kekuatan jiwa yang melampaui siapa pun.</p><p>Pramoedya mendiktekan buku ini saat dipenjara di Pulau Buru. Bukti bahwa kata-kata tidak bisa dipenjarakan.</p>`},
+  {id:19,genre:'Non-Fiksi',title:'Atomic Habits',author:'James Clear',year:2018,synopsis:`<h2>Atomic Habits — James Clear</h2><p>Perubahan besar tidak datang dari keputusan besar — ia datang dari perubahan-perubahan kecil yang konsisten. James Clear menyebutnya <em>atomic habits</em>: kebiasaan-kebiasaan kecil yang tumbuh secara eksponensial seiring waktu.</p><p>Clear membangun sistem elegan: setiap kebiasaan memiliki empat tahap — tanda, keinginan, respons, dan hadiah. Dengan memahami keempat tahap ini, kita bisa membangun kebiasaan baik dan menghancurkan kebiasaan buruk.</p><p>Lebih dari 15 juta eksemplar terjual. Perubahan kebiasaan yang langgeng dimulai ketika kita mengubah cara memandang diri sendiri: bukan "saya ingin berlari" tetapi "saya adalah seorang pelari".</p>`},
+  {id:20,genre:'Non-Fiksi',title:'Thinking, Fast and Slow',author:'Daniel Kahneman',year:2011,synopsis:`<h2>Thinking, Fast and Slow — Daniel Kahneman</h2><p>Pikiran kita bekerja dalam dua mode. Sistem 1 bekerja cepat dan intuitif — ia yang membuat Anda langsung tahu 2+2=4. Sistem 2 bekerja lambat dan analitis — ia yang Anda gunakan saat mengisi formulir pajak.</p><p>Daniel Kahneman, peraih Nobel Ekonomi, menghabiskan puluhan tahun meneliti bagaimana kedua sistem ini berinteraksi — dan bagaimana Sistem 1 seringkali memimpin kita ke dalam jebakan kognitif yang sistematis.</p><p>Buku yang mengubah cara dunia memahami pengambilan keputusan — dan cara kita memahami diri kita sendiri.</p>`},
+  {id:21,genre:'Non-Fiksi',title:'Educated',author:'Tara Westover',year:2018,synopsis:`<h2>Educated — Tara Westover</h2><p>Tara Westover tumbuh di pegunungan Idaho tanpa akte kelahiran, tanpa vaksin, dan tanpa pernah menginjak bangku sekolah. Masa kecil Tara adalah campuran keindahan alam pegunungan dan kekerasan yang ia pelajari untuk tidak pernah dinamai.</p><p>Pada usia tujuh belas tahun, tanpa persiapan formal apapun, Tara mengambil buku teks dan mulai belajar sendiri. Ia berhasil masuk BYU, kemudian Cambridge, kemudian Harvard.</p><p><em>Educated</em> adalah memoar tentang kekuatan pendidikan untuk mengubah persepsi seseorang tentang dirinya sendiri dan dunianya. Sebuah buku yang mengubah cara Anda memandang apa artinya "terdidik".</p>`},
+];
+
+const state = {
+  favorites: new Set(),
+  ratings: {},
+  reviews: {},
+  notes: {},
+  bookmarks: new Set(),
+  progress: {},
+  currentBook: null,
+  currentGenre: 'all',
+  darkMode: false,
+};
+
+function renderBooks(books) {
+  const grid = document.getElementById('bookGrid');
+  grid.innerHTML = books.map(b => {
+    const gc = GENRE_COLORS[b.genre];
+    const rating = state.ratings[b.id] || 0;
+    const isFav = state.favorites.has(b.id);
+    const stars = [1,2,3,4,5].map(i=>`<span class="star ${i<=rating?'on':''}" onclick="quickRate(event,${b.id},${i})">★</span>`).join('');
+    return `<div class="book-card">
+      <div class="book-cover" style="background:${gc.bg}">
+        <div class="book-cover-inner">
+          <span class="cover-icon">${gc.icon}</span>
+          <div class="cover-title">${b.title}</div>
+        </div>
+      </div>
+      <div class="book-info">
+        <div class="book-genre-tag" style="background:${gc.light};color:${gc.text}">${b.genre}</div>
+        <div class="book-name">${b.title}</div>
+        <div class="book-author">${b.author} · ${b.year < 0 ? Math.abs(b.year)+' SM' : b.year}</div>
+        <div class="stars">${stars}</div>
+        <div class="book-actions">
+          <button class="btn-read" onclick="openBook(${b.id})">BACA</button>
+          <button class="btn-fav ${isFav?'active':''}" onclick="toggleFav(event,${b.id})" title="Favorit">${isFav?'❤️':'🤍'}</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function quickRate(e, id, val) {
+  e.stopPropagation();
+  state.ratings[id] = val;
+  applyFilter();
+}
+
+function toggleFav(e, id) {
+  e.stopPropagation();
+  if (state.favorites.has(id)) state.favorites.delete(id);
+  else state.favorites.add(id);
+  applyFilter();
+}
+
+function applyFilter() {
+  let books = BOOKS;
+  if (state.currentGenre !== 'all') books = books.filter(b=>b.genre===state.currentGenre);
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  if (q) books = books.filter(b=>b.title.toLowerCase().includes(q)||b.author.toLowerCase().includes(q));
+  renderBooks(books);
+}
+
+function filterGenre(genre, el) {
+  state.currentGenre = genre;
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('headerTitle').textContent = genre;
+  document.getElementById('pageTitle').textContent = genre;
+  document.getElementById('pageSub').textContent = 'Koleksi buku ' + genre + ' pilihan';
+  document.getElementById('homePage').style.display = 'block';
+  document.getElementById('activityPage').style.display = 'none';
+  applyFilter();
+}
+
+function doSearch() { applyFilter(); }
+
+function openBook(id) {
+  const b = BOOKS.find(x=>x.id===id);
+  if(!b) return;
+  state.currentBook = b;
+  document.getElementById('modalTitle').textContent = b.title;
+  document.getElementById('modalAuthor').textContent = b.author;
+  document.getElementById('modalContent').innerHTML = b.synopsis;
+  const prog = state.progress[id]||0;
+  document.getElementById('progressRange').value = prog;
+  document.getElementById('progressFill').style.width = prog+'%';
+  document.getElementById('progressPct').textContent = prog+'%';
+  document.getElementById('reviewInput').value = state.reviews[id]||'';
+  document.getElementById('noteInput').value = state.notes[id]||'';
+  renderModalStars(state.ratings[id]||0);
+  document.getElementById('bkmBtn').textContent = state.bookmarks.has(id)?'🔖✓':'🔖';
+  document.getElementById('readModal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('readModal').classList.remove('open'); }
+document.getElementById('readModal').addEventListener('click', function(e){ if(e.target===this) closeModal(); });
+
+function renderModalStars(val) {
+  document.getElementById('modalStars').innerHTML = [1,2,3,4,5].map(i=>
+    `<span class="star ${i<=val?'on':''}" onclick="modalRate(${i})">★</span>`
+  ).join('');
+}
+
+function modalRate(val) {
+  if(state.currentBook) state.ratings[state.currentBook.id] = val;
+  renderModalStars(val);
+  applyFilter();
+}
+
+function saveReview() {
+  if(!state.currentBook) return;
+  const id = state.currentBook.id;
+  state.reviews[id] = document.getElementById('reviewInput').value;
+  state.notes[id] = document.getElementById('noteInput').value;
+  const btn = document.getElementById('saveBtn');
+  btn.textContent = 'TERSIMPAN ✓';
+  setTimeout(()=>{ btn.textContent='SIMPAN'; }, 1500);
+}
+
+function updateProgress(val) {
+  if(!state.currentBook) return;
+  state.progress[state.currentBook.id] = parseInt(val);
+  document.getElementById('progressFill').style.width = val+'%';
+  document.getElementById('progressPct').textContent = val+'%';
+}
+
+function addBookmark() {
+  if(!state.currentBook) return;
+  const id = state.currentBook.id;
+  if(state.bookmarks.has(id)) state.bookmarks.delete(id);
+  else state.bookmarks.add(id);
+  document.getElementById('bkmBtn').textContent = state.bookmarks.has(id)?'🔖✓':'🔖';
+}
+
+function setFSize(s) { document.getElementById('modalBox').dataset.fsize = s; }
+
+function toggleModalDark() {
+  const b = document.getElementById('modalBox');
+  const isDark = b.style.background === '#0d0a14';
+  b.style.background = isDark ? '' : '#0d0a14';
+  b.style.color = isDark ? '' : '#f5e6d3';
+  document.getElementById('modalDarkBtn').textContent = isDark ? '🌙' : '☀️';
+}
+
+function showPage(page, el) {
+  document.getElementById('homePage').style.display = page==='home' ? 'block' : 'none';
+  document.getElementById('activityPage').style.display = page==='activity' ? 'block' : 'none';
+  if(el) {
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    el.classList.add('active');
+  }
+  if(page==='activity') renderActivity();
+  if(page==='home') {
+    document.getElementById('headerTitle').textContent = 'Digital Library';
+    document.getElementById('pageTitle').textContent = 'Semua Koleksi';
+    document.getElementById('pageSub').textContent = 'Temukan buku favoritmu dari berbagai genre';
+    state.currentGenre = 'all';
+    applyFilter();
+  }
+}
+
+function renderActivity() {
+  const read = Object.keys(state.progress).filter(id=>state.progress[id]>0);
+  const done = Object.keys(state.progress).filter(id=>state.progress[id]>=100);
+  const totalPages = read.reduce((a,id)=>a+Math.round(state.progress[id]*3),0);
+
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="stat-num">${read.length}</div><div class="stat-label">Buku Dibaca</div></div>
+    <div class="stat-card"><div class="stat-num">${done.length}</div><div class="stat-label">Selesai</div></div>
+    <div class="stat-card"><div class="stat-num">${totalPages}</div><div class="stat-label">Total Halaman</div></div>
+    <div class="stat-card"><div class="stat-num">${state.favorites.size}</div><div class="stat-label">Favorit</div></div>
+    <div class="stat-card"><div class="stat-num">${state.bookmarks.size}</div><div class="stat-label">Bookmark</div></div>
+    <div class="stat-card"><div class="stat-num">${Object.keys(state.ratings).length}</div><div class="stat-label">Dirating</div></div>
+  `;
+
+  const readingBooks = read.filter(id=>state.progress[id]<100).map(id=>BOOKS.find(b=>b.id==id)).filter(Boolean);
+  document.getElementById('readingList').innerHTML = readingBooks.length ? readingBooks.map(b=>{
+    const gc = GENRE_COLORS[b.genre];
+    const p = state.progress[b.id];
+    return `<div class="activity-item">
+      <div class="act-cover" style="background:${gc.bg}">${gc.icon}</div>
+      <div class="act-info">
+        <div class="act-title">${b.title}</div>
+        <div class="act-author">${b.author}</div>
+        <div class="act-progress"><div class="act-progress-fill" style="width:${p}%"></div></div>
+        <div class="act-pct">${p}% selesai</div>
+      </div>
+      <button class="btn-read" onclick="openBook(${b.id})" style="min-width:60px">LANJUT</button>
+    </div>`;
+  }).join('') : '<p style="font-style:italic;color:var(--text3);font-size:14px">Belum ada buku yang sedang dibaca. Mulai membaca sekarang!</p>';
+
+  const badges = [
+    {icon:'📖',name:'Pembaca Perdana',cond:read.length>=1},
+    {icon:'🏆',name:'Penyelesai Buku',cond:done.length>=1},
+    {icon:'📜',name:'Penjelajah Sejarah',cond:BOOKS.filter(b=>b.genre==='Sejarah'&&state.progress[b.id]>0).length>=1},
+    {icon:'🦉',name:'Filsuf Muda',cond:BOOKS.filter(b=>b.genre==='Filsafat'&&state.progress[b.id]>0).length>=1},
+    {icon:'⚛️',name:'Fisikawan Amatir',cond:BOOKS.filter(b=>b.genre==='Fisika'&&state.progress[b.id]>0).length>=1},
+    {icon:'❤️',name:'Pemburu Favorit',cond:state.favorites.size>=3},
+    {icon:'🔖',name:'Raja Bookmark',cond:state.bookmarks.size>=2},
+    {icon:'⭐',name:'Kritikus Sastra',cond:Object.keys(state.ratings).length>=5},
+  ];
+  document.getElementById('badgeGrid').innerHTML = badges.map(b=>
+    `<div class="badge ${b.cond?'':'locked'}"><span class="badge-icon">${b.icon}</span><span class="badge-name">${b.name}</span></div>`
+  ).join('');
+
+  const reviewedIds = Object.keys(state.reviews).filter(id=>state.reviews[id]);
+  document.getElementById('reviewList').innerHTML = reviewedIds.length ? reviewedIds.map(id=>{
+    const b = BOOKS.find(x=>x.id==id);
+    const r = state.ratings[id]||0;
+    return b ? `<div class="review-item">
+      <div class="review-header">
+        <div class="review-book">${b.title}</div>
+        <div class="stars">${[1,2,3,4,5].map(i=>`<span class="star ${i<=r?'on':''}" style="cursor:default">★</span>`).join('')}</div>
+      </div>
+      <div class="review-text">"${state.reviews[id]}"</div>
+    </div>` : '';
+  }).join('') : '<p style="font-style:italic;color:var(--text3);font-size:14px">Belum ada ulasan. Buka buku dan tulis ulasanmu!</p>';
+
+  const notedIds = Object.keys(state.notes).filter(id=>state.notes[id]);
+  document.getElementById('noteList').innerHTML = notedIds.length ? notedIds.map(id=>{
+    const b = BOOKS.find(x=>x.id==id);
+    return b ? `<div class="note-item">
+      <div class="note-book">${b.title.toUpperCase()} · ${b.author}</div>
+      <div class="note-text">${state.notes[id]}</div>
+    </div>` : '';
+  }).join('') : '<p style="font-style:italic;color:var(--text3);font-size:14px">Belum ada catatan. Catat pemikiranmu saat membaca!</p>';
+}
+
+function toggleDark() {
+  state.darkMode = !state.darkMode;
+  document.getElementById('app').dataset.dark = state.darkMode;
+  document.getElementById('darkBtn').textContent = state.darkMode ? '☀️ Terang' : '🌙 Gelap';
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+}
+
+// Init
+renderBooks(BOOKS);
+</script>
+</body>
+</html>
